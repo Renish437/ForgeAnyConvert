@@ -15,24 +15,9 @@ for (const dir of [config.uploadsDir, config.outputsDir]) {
 
 const app = express();
 
-// Vercel gives every deployment of a project its own URL: the stable
-// production alias (forge-any-convert.vercel.app) plus a new one per
-// preview/branch build (forge-any-convert-<hash-or-branch>.vercel.app).
-// Matching that whole family by pattern means CORS keeps working across
-// every preview deploy without hand-maintaining an exact-string env var —
-// CORS_ORIGINS still works as an explicit allowlist on top of this for
-// anything outside that pattern (e.g. a custom domain).
-const explicitOrigins = new Set(config.corsOrigins);
-const VERCEL_PROJECT_ORIGIN = /^https:\/\/forge-any-convert(-[a-z0-9-]+)?\.vercel\.app$/i;
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // No Origin header at all (curl, server-to-server, same-origin) — allow.
-      if (!origin) return callback(null, true);
-      const allowed = explicitOrigins.has(origin) || VERCEL_PROJECT_ORIGIN.test(origin);
-      callback(null, allowed);
-    },
+    origin: config.corsOrigins,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
     exposedHeaders: ["Content-Disposition", "X-Original-Size", "X-Result-Size"],
@@ -78,15 +63,6 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000).unref();
 
-// Vercel's @vercel/node builder imports this file and calls the exported
-// app as a request handler directly — it does not run app.listen() itself,
-// and calling it in that environment would try (and fail) to bind a real
-// port. Everywhere else (Docker, a VPS, local dev) nothing sets
-// process.env.VERCEL, so this behaves exactly as before.
-if (!process.env.VERCEL) {
-  app.listen(config.port, () => {
-    console.log(`ForgeAnyConvert backend listening on port ${config.port}`);
-  });
-}
-
-module.exports = app;
+app.listen(config.port, () => {
+  console.log(`ForgeAnyConvert backend listening on port ${config.port}`);
+});

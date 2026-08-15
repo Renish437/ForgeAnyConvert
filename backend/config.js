@@ -1,15 +1,10 @@
 const path = require("path");
-const os = require("os");
 
-// os.tmpdir() resolves to /tmp on Vercel (the ONLY writable path in its
-// serverless filesystem — everything else is a read-only deployment
-// bundle) and to a normal OS temp dir everywhere else (Docker, VPS, local
-// dev), so this one change works across every deployment target.
-const SCRATCH_ROOT = path.join(os.tmpdir(), "forgeanyconvert");
+const ROOT = __dirname;
 
 module.exports = {
-  uploadsDir: path.join(SCRATCH_ROOT, "uploads"),
-  outputsDir: path.join(SCRATCH_ROOT, "outputs"),
+  uploadsDir: path.join(ROOT, "tmp", "uploads"),
+  outputsDir: path.join(ROOT, "tmp", "outputs"),
   // Max upload size in bytes (default 200 MB, override with MAX_UPLOAD_MB env var)
   maxUploadBytes: (parseInt(process.env.MAX_UPLOAD_MB, 10) || 200) * 1024 * 1024,
   // How long (ms) a job's temp files are kept before forced cleanup, in case a
