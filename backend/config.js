@@ -1,7 +1,8 @@
 const path = require("path");
+const os = require("os");    
 
 const ROOT = __dirname;
-
+const TMP_ROOT = path.join(os.tmpdir(), "forgeanyconvert");
 module.exports = {
   uploadsDir: path.join(ROOT, "tmp", "uploads"),
   outputsDir: path.join(ROOT, "tmp", "outputs"),
