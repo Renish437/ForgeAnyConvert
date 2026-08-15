@@ -56,13 +56,13 @@ app.use((err, req, res, next) => {
         : err.message;
     return res.status(400).json({ message });
   }
-  console.error(err);
-  console.error(err.message);
-  console.error(err.stack);
+  // console.error(err);
+  // console.error(err.message);
+  // console.error(err.stack);
   res.status(500).json({
     message: "Unexpected server error.",
-    debug: err.message, // TEMP — remove before real users hit this
-    stack: err.stack, // TEMP — remove before real users hit this
+    // debug: err.message, // TEMP — remove before real users hit this
+    // stack: err.stack, // TEMP — remove before real users hit this
   });
 });
 
