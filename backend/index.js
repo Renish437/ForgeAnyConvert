@@ -63,6 +63,15 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000).unref();
 
-app.listen(config.port, () => {
-  console.log(`ForgeAnyConvert backend listening on port ${config.port}`);
-});
+// Vercel's @vercel/node builder imports this file and calls the exported
+// app as a request handler directly — it does not run app.listen() itself,
+// and calling it in that environment would try (and fail) to bind a real
+// port. Everywhere else (Docker, a VPS, local dev) nothing sets
+// process.env.VERCEL, so this behaves exactly as before.
+if (!process.env.VERCEL) {
+  app.listen(config.port, () => {
+    console.log(`ForgeAnyConvert backend listening on port ${config.port}`);
+  });
+}
+
+module.exports = app;
