@@ -101,7 +101,7 @@ function GithubGrabber() {
               disabled={!canConvert}
               className="mt-5 flex items-center gap-2 border border-accent/60 bg-accent/10 px-6 py-2.5 font-mono text-sm font-medium text-accent transition-all hover:bg-accent/20 disabled:cursor-not-allowed disabled:border-border disabled:bg-transparent disabled:text-ink-faint"
             >
-              {isBusy ? "fetching\u2026" : "$ fetch"} <FaArrowRight className="text-xs" />
+              {isBusy ? "fetching\u2026" : "Fetch"} <FaArrowRight className="text-xs" />
             </motion.button>
           )}
         </motion.div>
