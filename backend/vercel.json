@@ -1,10 +1,12 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "index.js", "use": "@vercel/node" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api" }
   ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/index.js" }
-  ]
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "includeFiles": "node_modules/{ffmpeg-static,ffprobe-static}/**"
+    }
+  }
 }
-
