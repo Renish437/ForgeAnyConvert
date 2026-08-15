@@ -1,0 +1,320 @@
+@import "tailwindcss";
+
+/* Enables class-based dark mode (.dark on <html>) instead of v4's default
+   media-query-only behavior, so the manual light/dark toggle works. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------------
+   Base design tokens. These become real Tailwind utilities automatically
+   (--color-bg -> bg-bg, text-bg, border-bg, etc; --font-display -> font-display).
+   Values here are the fallback/default (Workshop, dark) — every product
+   theme below overrides the same variable names, scoped to a
+   [data-theme="..."] attribute set on <html> by whichever page is active,
+   further scoped by ".dark" for the dark variant of that theme. Because
+   Tailwind v4 utilities compile straight to `var(--color-*)`, overriding
+   the custom property in a more specific selector is enough to re-theme
+   every utility class already in use — no per-component theme logic.
+   ------------------------------------------------------------------------- */
+@theme {
+  --color-bg: #14151a;
+  --color-surface: #1b1d24;
+  --color-raised: #23262f;
+  --color-border: #33363f;
+  --color-border-soft: #282b33;
+  --color-ink: #ededE6;
+  --color-ink-dim: #9a9ca5;
+  --color-ink-faint: #6b6e79;
+  --color-accent: #ff6a39;
+  --color-accent-dim: #c94e24;
+  --color-accent-soft: #ffa36c;
+  --color-accent2: #6fd3c7;
+  --color-accent2-dim: #3e8f86;
+  --color-danger: #ff5c5c;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-sans: "Inter", sans-serif;
+
+  --shadow-glow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent), 0 0 24px -4px
+    color-mix(in srgb, var(--color-accent) 45%, transparent);
+  --shadow-glow-sm: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  --shadow-glow2: 0 0 0 1px color-mix(in srgb, var(--color-accent2) 35%, transparent), 0 0 20px -6px
+    color-mix(in srgb, var(--color-accent2) 40%, transparent);
+
+  --animate-pulse-glow: pulse-glow 1.8s ease-in-out infinite;
+  --animate-rise: rise 0.25s ease-out;
+  --animate-loading-sweep: loading-sweep 1.2s ease-in-out infinite;
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes loading-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+  }
+}
+
+/* ===== Theme: Workshop — Forge's home brand (landing + universal converter) ===== */
+[data-theme="workshop"] {
+  /* light */
+  --color-bg: #fbf9f6;
+  --color-surface: #ffffff;
+  --color-raised: #f3efe9;
+  --color-border: #e4dfd6;
+  --color-border-soft: #ece7de;
+  --color-ink: #221f1b;
+  --color-ink-dim: #6b655c;
+  --color-ink-faint: #9c948a;
+  --color-accent: #e2551f;
+  --color-accent-dim: #b8441a;
+  --color-accent-soft: #ff8a54;
+  --color-accent2: #1f8f80;
+  --color-accent2-dim: #176a5f;
+}
+[data-theme="workshop"].dark {
+  --color-bg: #14151a;
+  --color-surface: #1b1d24;
+  --color-raised: #23262f;
+  --color-border: #33363f;
+  --color-border-soft: #282b33;
+  --color-ink: #ededE6;
+  --color-ink-dim: #9a9ca5;
+  --color-ink-faint: #6b6e79;
+  --color-accent: #ff6a39;
+  --color-accent-dim: #c94e24;
+  --color-accent-soft: #ffa36c;
+  --color-accent2: #6fd3c7;
+  --color-accent2-dim: #3e8f86;
+}
+
+/* ===== Theme: PDF Studio — premium glassy SaaS product ===== */
+[data-theme="pdfstudio"] {
+  --font-display: "Sora", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  /* light */
+  --color-bg: #f6f4ff;
+  --color-surface: #ffffff;
+  --color-raised: #ede9fe;
+  --color-border: #ddd6fe;
+  --color-border-soft: #e7e1fb;
+  --color-ink: #1e1b2e;
+  --color-ink-dim: #625f78;
+  --color-ink-faint: #948fb0;
+  --color-accent: #7c3aed;
+  --color-accent-dim: #6d28d9;
+  --color-accent-soft: #a78bfa;
+  --color-accent2: #db2777;
+  --color-accent2-dim: #be185d;
+}
+[data-theme="pdfstudio"].dark {
+  --color-bg: #0b0b14;
+  --color-surface: #14131f;
+  --color-raised: #1c1a2b;
+  --color-border: #2c2a41;
+  --color-border-soft: #211f30;
+  --color-ink: #f1f0ff;
+  --color-ink-dim: #a8a5c4;
+  --color-ink-faint: #6e6b8c;
+  --color-accent: #8b5cf6;
+  --color-accent-dim: #6d28d9;
+  --color-accent-soft: #c4b5fd;
+  --color-accent2: #ec4899;
+  --color-accent2-dim: #be185d;
+}
+
+/* ===== Theme: GitHub Grabber — terminal-native, echoes GitHub's own palette ===== */
+[data-theme="github"] {
+  --font-display: "JetBrains Mono", monospace;
+  --font-mono: "JetBrains Mono", monospace;
+  /* light */
+  --color-bg: #ffffff;
+  --color-surface: #f6f8fa;
+  --color-raised: #eaeef2;
+  --color-border: #d0d7de;
+  --color-border-soft: #e4e8ec;
+  --color-ink: #1f2328;
+  --color-ink-dim: #59636e;
+  --color-ink-faint: #6e7781;
+  --color-accent: #1a7f37;
+  --color-accent-dim: #116329;
+  --color-accent-soft: #2da44e;
+  --color-accent2: #8250df;
+  --color-accent2-dim: #6639ba;
+}
+[data-theme="github"].dark {
+  --color-bg: #0d1117;
+  --color-surface: #161b22;
+  --color-raised: #21262d;
+  --color-border: #30363d;
+  --color-border-soft: #262c33;
+  --color-ink: #e6edf3;
+  --color-ink-dim: #8b949e;
+  --color-ink-faint: #6e7681;
+  --color-accent: #3fb950;
+  --color-accent-dim: #2ea043;
+  --color-accent-soft: #56d364;
+  --color-accent2: #a371f7;
+  --color-accent2-dim: #8957e5;
+}
+
+/* ===== Theme: Image Lab — vibrant creative-studio feel ===== */
+[data-theme="imagelab"] {
+  --font-display: "Poppins", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  /* light */
+  --color-bg: #fff7f0;
+  --color-surface: #ffffff;
+  --color-raised: #ffede0;
+  --color-border: #ffd9bf;
+  --color-border-soft: #ffe6d3;
+  --color-ink: #2b1b12;
+  --color-ink-dim: #8a6f5c;
+  --color-ink-faint: #b39a87;
+  --color-accent: #e5195e;
+  --color-accent-dim: #c01050;
+  --color-accent-soft: #ff3d71;
+  --color-accent2: #00a894;
+  --color-accent2-dim: #00786a;
+}
+[data-theme="imagelab"].dark {
+  --color-bg: #1a1025;
+  --color-surface: #241633;
+  --color-raised: #2e1d42;
+  --color-border: #3d2a54;
+  --color-border-soft: #302047;
+  --color-ink: #fdf4ff;
+  --color-ink-dim: #c4a8d9;
+  --color-ink-faint: #8b6fa3;
+  --color-accent: #ff3d71;
+  --color-accent-dim: #e0245e;
+  --color-accent-soft: #ff6f9c;
+  --color-accent2: #00d9c0;
+  --color-accent2-dim: #00a894;
+}
+
+/* ===== Theme: Media Converter — cinematic, DAW/broadcast-console feel ===== */
+[data-theme="media"] {
+  --font-display: "Rajdhani", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  /* light */
+  --color-bg: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-raised: #e9edf3;
+  --color-border: #d6dce5;
+  --color-border-soft: #e0e5ec;
+  --color-ink: #10151d;
+  --color-ink-dim: #4a5568;
+  --color-ink-faint: #7a8699;
+  --color-accent: #0091ad;
+  --color-accent-dim: #00728a;
+  --color-accent-soft: #00b8d9;
+  --color-accent2: #d6266b;
+  --color-accent2-dim: #ab1c55;
+}
+[data-theme="media"].dark {
+  --color-bg: #0a0e14;
+  --color-surface: #10151d;
+  --color-raised: #161d28;
+  --color-border: #232b38;
+  --color-border-soft: #1b222e;
+  --color-ink: #e8edf4;
+  --color-ink-dim: #8a97a8;
+  --color-ink-faint: #5c6779;
+  --color-accent: #00e0ff;
+  --color-accent-dim: #00a8c4;
+  --color-accent-soft: #5ce8ff;
+  --color-accent2: #ff2d78;
+  --color-accent2-dim: #cc1f5f;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-bg);
+  }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  /* Every clickable element gets a pointer cursor by default. No !important
+     here on purpose: Tailwind's utilities layer loads after this base layer,
+     so a component-level `disabled:cursor-not-allowed` (or similar) still
+     correctly wins over this default for disabled buttons. */
+  a, button, [role="button"], summary, label, .cursor-pointer {
+    cursor: pointer;
+  }
+  button:disabled, [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Signature element: instrument-panel corner brackets — used across every
+     theme as the one consistent "this is being registered/measured"
+     motif, tying the different product themes back to one family. */
+  .bracket-frame {
+    position: relative;
+  }
+  .bracket-frame::before,
+  .bracket-frame::after,
+  .bracket-frame > .bracket-tl,
+  .bracket-frame > .bracket-br {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    pointer-events: none;
+  }
+  .bracket-frame::before {
+    top: -1px;
+    left: -1px;
+    border-top: 2px solid currentColor;
+    border-left: 2px solid currentColor;
+  }
+  .bracket-frame::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+  }
+  .bracket-frame > .bracket-tl {
+    top: -1px;
+    right: -1px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+  }
+  .bracket-frame > .bracket-br {
+    bottom: -1px;
+    left: -1px;
+    border-bottom: 2px solid currentColor;
+    border-left: 2px solid currentColor;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 0;
+  border: 2px solid var(--color-bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-faint);
+}

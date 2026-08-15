@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:8080
+      - MAX_UPLOAD_MB=200
+      # Optional: raises GitHub's unauthenticated 60/hour rate limit to
+      # 5,000/hour. Set this if GitHub Grabber sees real traffic.
+      # - GITHUB_TOKEN=
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:3000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

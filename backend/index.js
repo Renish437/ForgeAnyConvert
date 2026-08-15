@@ -1,0 +1,68 @@
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
+
+const config = require("./config");
+const formatsRoute = require("./routes/formats");
+const convertRoute = require("./routes/convert");
+
+// Ensure scratch directories exist before anything tries to write into them.
+for (const dir of [config.uploadsDir, config.outputsDir]) {
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+const app = express();
+
+app.use(
+  cors({
+    origin: config.corsOrigins,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+    exposedHeaders: ["Content-Disposition", "X-Original-Size", "X-Result-Size"],
+  })
+);
+
+app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+app.use("/api/formats", formatsRoute);
+app.use("/api/convert", convertRoute);
+
+// Central error handler — catches Multer errors (e.g. file too large) and
+// anything else thrown synchronously, and always responds with JSON so the
+// frontend never has to parse an HTML error page.
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? `File is too large. Max size is ${config.maxUploadBytes / (1024 * 1024)} MB.`
+        : err.message;
+    return res.status(400).json({ message });
+  }
+  console.error(err);
+  res.status(500).json({ message: "Unexpected server error." });
+});
+
+// Periodic sweep for orphaned temp directories (e.g. left behind after a
+// crash mid-request), so disk usage doesn't grow unbounded over time.
+setInterval(() => {
+  for (const dir of [config.uploadsDir, config.outputsDir]) {
+    fs.readdir(dir, (err, entries) => {
+      if (err) return;
+      const now = Date.now();
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry);
+        fs.stat(fullPath, (statErr, stats) => {
+          if (statErr) return;
+          if (now - stats.mtimeMs > config.jobTtlMs) {
+            fs.rm(fullPath, { recursive: true, force: true }, () => {});
+          }
+        });
+      }
+    });
+  }
+}, 5 * 60 * 1000).unref();
+
+app.listen(config.port, () => {
+  console.log(`ForgeAnyConvert backend listening on port ${config.port}`);
+});
