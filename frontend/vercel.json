@@ -5,7 +5,7 @@
   "outputDirectory": "dist",
   "installCommand": "pnpm install",
   "env": {
-    "VITE_API_BASE_URL": "https://forge-any-convert-server.vercel.app/"
+    "VITE_API_BASE_URL": "https://forge-any-convert-server.vercel.app/api"
   },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
