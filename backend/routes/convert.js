@@ -7,7 +7,7 @@ const { getHandler, getOperation } = require("../converters/registry");
 const { normalizeExt, mimeFor } = require("../utils/fileTypes");
 const { uploadsDir } = require("../config");
 const { createJobWorkspace, cleanupWorkspace } = require("../utils/workspace");
-const { AppError, ErrorCodes, toClientError } = require("../utils/errors");
+const { ErrorCodes, toClientError } = require("../utils/errors");
 const config = require("../config");
 
 const router = express.Router();
@@ -40,10 +40,20 @@ const URL_OPERATIONS = new Set(["github-download"]);
 /** Insert a short random suffix before the extension, e.g. "report-a1b2c3d4.pdf". */
 function withUuidSuffix(filename, shouldAppend) {
   if (!shouldAppend) return filename;
+
   const ext = path.extname(filename);
   const base = filename.slice(0, filename.length - ext.length);
   const shortId = crypto.randomUUID().split("-")[0];
+
   return `${base}-${shortId}${ext}`;
+}
+
+/** Make a filename safe for use in an HTTP Content-Disposition header. */
+function sanitizeHeaderFilename(filename) {
+  return filename
+    .normalize("NFKD")
+    .replace(/[^\x20-\x7E]/g, "_")
+    .replace(/["\\]/g, "_");
 }
 
 router.post("/", upload.array("files"), async (req, res) => {
@@ -76,12 +86,14 @@ router.post("/", upload.array("files"), async (req, res) => {
   // error would get in the catch block, so route 400s through here too.
   const badRequest = (message, code = ErrorCodes.INVALID_INPUT) => {
     cleanupAll();
-    if (!res.headersSent) res.status(400).json({ success: false, error: { code, message } });
+    if (!res.headersSent)
+      res.status(400).json({ success: false, error: { code, message } });
   };
 
   try {
     const operation = req.body.operation || null;
-    const appendUuid = req.body.appendUuid === "true" || req.body.appendUuid === true;
+    const appendUuid =
+      req.body.appendUuid === "true" || req.body.appendUuid === true;
 
     let resultPath;
     let isZip = false;
@@ -132,10 +144,13 @@ router.post("/", upload.array("files"), async (req, res) => {
         imageFormat: req.body.imageFormat || "png",
         level: req.body.level || "medium",
         mode: req.body.mode,
-        customQuality: req.body.customQuality ? Number(req.body.customQuality) : undefined,
+        customQuality: req.body.customQuality
+          ? Number(req.body.customQuality)
+          : undefined,
         maxWidth: req.body.maxWidth ? Number(req.body.maxWidth) : undefined,
         maxHeight: req.body.maxHeight ? Number(req.body.maxHeight) : undefined,
-        allowEnlarge: req.body.allowEnlarge === "true" || req.body.allowEnlarge === true,
+        allowEnlarge:
+          req.body.allowEnlarge === "true" || req.body.allowEnlarge === true,
       };
       const outcome = await handler(uploadedFiles[0].path, jobDir, options);
       if (typeof outcome === "object" && outcome.path) {
@@ -146,12 +161,16 @@ router.post("/", upload.array("files"), async (req, res) => {
       }
       targetExt = isZip ? "zip" : normalizeExt(resultPath);
       const originalBase = path.parse(uploadedFiles[0].originalname).name;
-      downloadName = isZip ? `${originalBase}-converted.zip` : `${originalBase}.${targetExt}`;
+      downloadName = isZip
+        ? `${originalBase}-converted.zip`
+        : `${originalBase}.${targetExt}`;
     } else {
       // Plain from -> to conversion
       if (uploadedFiles.length === 0) return badRequest("No file(s) uploaded.");
       if (uploadedFiles.length > 1) {
-        return badRequest("This conversion type accepts only one file at a time.");
+        return badRequest(
+          "This conversion type accepts only one file at a time.",
+        );
       }
       const file = uploadedFiles[0];
       const from = normalizeExt(file.originalname);
@@ -160,7 +179,10 @@ router.post("/", upload.array("files"), async (req, res) => {
 
       const handler = getHandler(from, to);
       if (!handler) {
-        return badRequest(`Converting .${from} to .${to} isn't supported yet.`, ErrorCodes.UNSUPPORTED_FORMAT);
+        return badRequest(
+          `Converting .${from} to .${to} isn't supported yet.`,
+          ErrorCodes.UNSUPPORTED_FORMAT,
+        );
       }
 
       const outcome = await handler(file.path, jobDir, {});
@@ -172,7 +194,9 @@ router.post("/", upload.array("files"), async (req, res) => {
       }
       targetExt = isZip ? "zip" : to;
       const originalBase = path.parse(file.originalname).name;
-      downloadName = isZip ? `${originalBase}-converted.zip` : `${originalBase}.${targetExt}`;
+      downloadName = isZip
+        ? `${originalBase}-converted.zip`
+        : `${originalBase}.${targetExt}`;
     }
 
     downloadName = withUuidSuffix(downloadName, appendUuid);
@@ -185,15 +209,24 @@ router.post("/", upload.array("files"), async (req, res) => {
     }
 
     res.setHeader("Content-Type", mimeFor(targetExt));
-    res.setHeader("Content-Disposition", `attachment; filename="${downloadName}"`);
+    const safeDownloadName = sanitizeHeaderFilename(downloadName);
 
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${safeDownloadName}"`,
+    );
+
+   
     const resultSize = fs.statSync(resultPath).size;
     res.setHeader("X-Result-Size", String(resultSize));
     if (uploadedFiles.length > 0) {
       const originalSize = uploadedFiles.reduce((sum, f) => sum + f.size, 0);
       res.setHeader("X-Original-Size", String(originalSize));
     }
-    res.setHeader("Access-Control-Expose-Headers", "Content-Disposition, X-Result-Size, X-Original-Size");
+    res.setHeader(
+      "Access-Control-Expose-Headers",
+      "Content-Disposition, X-Result-Size, X-Original-Size",
+    );
 
     const stream = fs.createReadStream(resultPath);
     stream.pipe(res);
