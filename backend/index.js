@@ -95,9 +95,9 @@ setInterval(
 // port. Everywhere else (Docker, a VPS, local dev) nothing sets
 // process.env.VERCEL, so this behaves exactly as before.
 if (!process.env.VERCEL) {
-  app.listen(config.port, () => {
-    console.log(`ForgeAnyConvert backend listening on port ${config.port}`);
-  });
+app.listen(config.port, "0.0.0.0", () => {
+  console.log(`ForgeAnyConvert backend listening on port ${config.port}`);
+});
 }
 
 module.exports = app;
